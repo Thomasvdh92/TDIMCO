@@ -1,6 +1,5 @@
 package TDIMCO.datareader;
 
-import TDIMCO.domain.Detector;
 import lombok.Data;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -17,18 +16,18 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * Created by Thomas on 18-3-2018.
+ * Class used to iterate through xml files. Class can be used to iterate through a folder containing multiple xml
+ * files. This class is limited to files that are similar to this example:
+ * "E:\Data Haven Bedrijf\Originele Data\2014 5\01.xml
  */
 @Data
 public class XmlIterator {
 
-    private TreeSet<Detector> allDetectors;
     private SpanCollection spanCollection;
     public int perc;
 
     public XmlIterator() {
         spanCollection = new SpanCollection();
-        allDetectors = new TreeSet<>();
     }
 
     public void iterateXmlFile(String xmlUrl) {
@@ -40,12 +39,12 @@ public class XmlIterator {
             Document doc = dBuilder.parse(xmlFile);
             doc.getDocumentElement().normalize();
             NodeList deviceNodeList = doc.getElementsByTagName("dev");
-            System.out.println(getDateFromFilePath(xmlUrl) + " --> Iterating " + deviceNodeList.getLength() + " nodes");
+//            System.out.println(getDateFromFilePath(xmlUrl) + " --> Iterating " + deviceNodeList.getLength() + " nodes");
 
             // Iterate through the list of nodes
             iterateXmlNodelist(deviceNodeList, false);
             iterateXmlNodelist(deviceNodeList, true);
-            spanCollection.determineStandardDevation();
+            spanCollection.determineStandardDeviation();
 
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
@@ -100,6 +99,11 @@ public class XmlIterator {
         }
     }
 
+    /**
+     * Method used to get the date from a file path.
+     * @param filepath file to get the date from
+     * @return Date of the file
+     */
     private String getDateFromFilePath(String filepath) {
         File xmlFile = new File(filepath);
         String folderPath = xmlFile.getParent();
@@ -112,7 +116,4 @@ public class XmlIterator {
         return sdf.format(date);
     }
 
-    public TreeSet<Detector> getAllDetectors() {
-        return allDetectors;
-    }
 }

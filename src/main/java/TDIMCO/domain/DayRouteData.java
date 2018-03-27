@@ -3,7 +3,7 @@ package TDIMCO.domain;
 import lombok.Data;
 
 /**
- * Created by Thomas on 19-3-2018.
+ * Collection of data. This class is also responsible for the regulation the iterations.
  */
 
 @Data
@@ -20,9 +20,6 @@ public class DayRouteData {
     public double secondSquared;
     public double standardDevation;
     public double extremity;
-
-    //TODO add data for second iteration
-
 
     public DayRouteData() {
         this.totalHits= 0;
@@ -42,6 +39,11 @@ public class DayRouteData {
         calculateAndSetExtremity();
     }
 
+    /**
+     * Method to add collected data to the collection.
+     * @param seconds Amount of time(in seconds) to be added
+     * @param secondIteration Used to determine whether its the first or second iteration
+     */
     public void addTimeToDayRouteData(double seconds, boolean secondIteration) {
         if(secondIteration) {
             if(seconds > maximumTime) return;

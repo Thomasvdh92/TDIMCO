@@ -1,7 +1,10 @@
 package TDIMCO.domain;
 
 /**
- * Created by Thomas on 18-3-2018.
+ * Enum used for vehicle types
+ * C = CAR
+ * T = TRUCK
+ * U = UNIDENTIFIED
  */
 public enum VehicleType {
     C, T, U

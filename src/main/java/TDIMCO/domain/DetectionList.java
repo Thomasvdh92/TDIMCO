@@ -15,7 +15,6 @@ public class DetectionList {
 
     private List<Detection> detections;
 
-
     public DetectionList(Device device) {
         this.device = device;
         detections = new ArrayList<Detection>();

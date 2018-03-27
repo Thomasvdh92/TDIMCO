@@ -1,8 +1,12 @@
 package TDIMCO.domain;
 
+import lombok.Data;
+
 /**
  * Created by Thomas on 19-3-2018.
  */
+
+@Data
 public class Route {
     private Detector detectorOne;
     private Detector detectorTwo;
@@ -14,14 +18,6 @@ public class Route {
 
     public String toString() {
         return detectorOne.toString() + " --> " + detectorTwo.toString();
-    }
-
-    public Detector getDetectorOne() {
-        return detectorOne;
-    }
-
-    public Detector getDetectorTwo() {
-        return detectorTwo;
     }
 
     @Override
@@ -40,20 +36,4 @@ public class Route {
         if (detectorOne != null ? !detectorOne.equals(route.detectorOne) : route.detectorOne != null) return false;
         return detectorTwo != null ? detectorTwo.equals(route.detectorTwo) : route.detectorTwo == null;
     }
-
-//    @Override
-//    public boolean equals(Object o) {
-//        if(this == o){
-//            System.out.println("equals is true");
-//            return true;
-//        }
-//        if(!(o instanceof Route)) {
-//            System.out.println("equals is false");
-//            return false;
-//        }
-//        Route oc = (Route) o;
-//        System.out.println(this.detectorOne.toString() + this.detectorTwo.toString() + " compare to " + ((Route) o).detectorOne.toString() + ((Route) o).detectorTwo.toString());
-//        System.out.println(this.detectorOne.equals(oc.detectorOne) && this.detectorTwo.equals(((Route) o).detectorTwo));
-//        return this.detectorOne == (oc.detectorOne) && this.detectorTwo ==(((Route) o).detectorTwo);
-//    }
 }

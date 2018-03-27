@@ -28,6 +28,7 @@ public class Detector implements Comparable<Detector>{
         return String.valueOf(detectorId);
     }
 
+    //TODO determine if this method is needed or no
     public List<Integer> getAllDetectors() {
         List<Integer> list = new ArrayList<Integer>();
         String filePath = "C:\\School\\TDIMCOapp\\src\\Detectors.txt";
