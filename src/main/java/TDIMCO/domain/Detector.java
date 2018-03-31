@@ -22,8 +22,6 @@ public class Detector implements Comparable<Detector>{
         this.detectorId = detectorId;
     }
 
-    public Detector(){}
-
     public String toString() {
         return String.valueOf(detectorId);
     }

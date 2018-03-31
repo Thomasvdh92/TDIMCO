@@ -7,9 +7,11 @@ import lombok.Data;
  */
 
 @Data
-public class Route {
+public class Route implements Comparable<Route> {
     private Detector detectorOne;
     private Detector detectorTwo;
+    private final static int firstIterationHits =0;
+    private final static int secondIterationHits =0;
 
     public Route(Detector detectorOne, Detector detectorTwo) {
         this.detectorOne = detectorOne;
@@ -35,5 +37,10 @@ public class Route {
         Route route = (Route) o;
         if (detectorOne != null ? !detectorOne.equals(route.detectorOne) : route.detectorOne != null) return false;
         return detectorTwo != null ? detectorTwo.equals(route.detectorTwo) : route.detectorTwo == null;
+    }
+
+    @Override
+    public int compareTo(Route o) {
+        return this.detectorOne.compareTo(o.detectorOne);
     }
 }

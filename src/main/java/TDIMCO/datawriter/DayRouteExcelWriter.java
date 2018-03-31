@@ -18,6 +18,7 @@ public class DayRouteExcelWriter implements ExcelWriter {
     private String[] columns;
     private List<Hour> hoursCollection;
 
+    //TODO change hourscolleciton to weekdaycollection
     public DayRouteExcelWriter(String[] columns, List<Hour> hoursCollection) {
         this.columns = columns;
         this.hoursCollection = hoursCollection;
@@ -95,5 +96,11 @@ public class DayRouteExcelWriter implements ExcelWriter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public String[] getHeaders() {
+        return new String[]{"Route","totalhits","minimumtime","maximumtime", "sum", "sumSquared",
+                "secondTotalHits","secondSum","secondSquared","standardDevation","extremity"};
     }
 }

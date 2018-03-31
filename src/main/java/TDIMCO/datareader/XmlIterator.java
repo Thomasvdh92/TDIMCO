@@ -1,5 +1,6 @@
 package TDIMCO.datareader;
 
+import TDIMCO.domain.VehicleType;
 import lombok.Data;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -25,9 +26,13 @@ public class XmlIterator {
 
     private SpanCollection spanCollection;
     public int perc;
+    private final static HashMap<String, Integer> vehicleTypeHits = new HashMap<>();
 
     public XmlIterator() {
         spanCollection = new SpanCollection();
+        vehicleTypeHits.put("C", 0);
+        vehicleTypeHits.put("T", 0);
+        vehicleTypeHits.put("U", 0);
     }
 
     public void iterateXmlFile(String xmlUrl) {
@@ -68,6 +73,8 @@ public class XmlIterator {
             }
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element) node;
+                incrementVehicleHits(String.valueOf(element.getAttribute("c")));
+                String s = String.valueOf(element.getAttribute("id"));
                 NodeList detectionNodeList = element.getElementsByTagName("rdd");
                 if (detectionNodeList.getLength() > 1) {
                     for (int j = 0; j < detectionNodeList.getLength()-1; j++) {
@@ -85,17 +92,32 @@ public class XmlIterator {
         }
     }
 
+    private void incrementVehicleHits(String s) {
+        System.out.println(s);
+        switch(s) {
+            case "U":
+                vehicleTypeHits.put("U", vehicleTypeHits.get("U")+1);
+                break;
+            case "C":
+                vehicleTypeHits.put("C", vehicleTypeHits.get("C")+1);
+                break;
+            case "T":
+                vehicleTypeHits.put("T", vehicleTypeHits.get("T")+1);
+                break;
+        }
+    }
+
     public void iterateXmlFolder(String folderPath) {
         int prcnt = 10;
         int i=0;
         File[] files = new File(folderPath).listFiles();
         for (File file : files) {
-            i++;
-            if (((i * 100) / files.length) >= prcnt) {
-                System.out.println(prcnt + "% of " + files.length +" files done");
-                prcnt += 10;
+            if (file.isDirectory()) {
+                iterateXmlFolder(file.getPath());
             }
-            iterateXmlFile(file.getAbsolutePath());
+//            iterateXmlFile(file.getAbsolutePath());
+            i++;
+            System.out.println(i + "/" + files.length +" files done");
         }
     }
 
@@ -114,6 +136,12 @@ public class XmlIterator {
         Date date = new GregorianCalendar(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day)).getTime();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         return sdf.format(date);
+    }
+
+    public void printVehicleHits() {
+        for(String s : vehicleTypeHits.keySet()) {
+            System.out.println(s + " - " +vehicleTypeHits.get(s));
+        }
     }
 
 }

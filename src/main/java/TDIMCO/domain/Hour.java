@@ -2,10 +2,7 @@ package TDIMCO.domain;
 
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Class used to split up data collection into hours
@@ -34,7 +31,9 @@ public class Hour {
      * @param secondIteration Boolean to determine the iteration
      */
     public void addTimeToDrd(Route r, double seconds, boolean secondIteration) {
-        if(hourCollection.containsKey(r)) hourCollection.get(r).addTimeToDayRouteData(seconds,secondIteration);
+        if(hourCollection.containsKey(r)){
+            hourCollection.get(r).addTimeToDayRouteData(seconds,secondIteration);
+        }
         else {
             hourCollection.put(r, new DayRouteData());
             hourCollection.get(r).addTimeToDayRouteData(seconds,secondIteration);

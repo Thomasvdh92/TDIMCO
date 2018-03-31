@@ -13,4 +13,6 @@ public interface ExcelWriter {
      * @param excelTitle Title of the excel file
      */
     void createExcelFile(String destination, String excelTitle);
+
+    String[] getHeaders();
 }

@@ -1,13 +1,8 @@
 package TDIMCO;
 
 
+import TDIMCO.datareader.SpanCollection;
 import TDIMCO.datareader.XmlIterator;
-import TDIMCO.datawriter.DayRouteExcelWriter;
-import TDIMCO.datawriter.ExcelWriter;
-import TDIMCO.datawriter.HourExcelWriter;
-import TDIMCO.domain.Hour;
-
-import java.util.List;
 
 /**
  * Created by Thomas on 18-3-2018.
@@ -21,20 +16,30 @@ public class Main {
         String excelDest = "F:\\Generated Excel Files";
 
         XmlIterator xmlIterator = new XmlIterator();
-        xmlIterator.iterateXmlFile(datahavenbedrijf);
+        xmlIterator.iterateXmlFile(voorbeeldxml);
 //        xmlIterator.iterateXmlFolder(xmlFolder);
+
+//        List<WeekDay> mappie = xmlIterator.getSpanCollection().getWeekDays();
 
         String[] headersDayRouteData = {"Route","totalhits","minimumtime","maximumtime", "sum", "sumSquared",
                             "secondTotalHits","secondSum","secondSquared","standardDevation","extremity"};
         String[] headersHour = {"Hour", "Total hits", "Sum in hours", "Sum squared in hours", "Average in minutes"};
-        List<Hour> hourCollections = xmlIterator.getSpanCollection().getHours();
+
+        SpanCollection.printTotalHits();
+        xmlIterator.printVehicleHits();
 
 
-        ExcelWriter excelWriter = new DayRouteExcelWriter(headersDayRouteData, hourCollections);
-
-        excelWriter.createExcelFile(excelDest, "DayRouteData");
-        excelWriter = new HourExcelWriter(headersHour, hourCollections);
-        excelWriter.createExcelFile(excelDest, "Hour Data");
+//        ExcelWriter excelWriter;
+//        for(WeekDay wd : mappie) {
+//            hourCollections = wd.getHours();
+//            excelWriter = new DayRouteExcelWriter(headersDayRouteData, hourCollections);
+//            excelWriter.createExcelFile(excelDest, wd.getDayOfWeek().name() + " - " +"DayRouteData");
+//        }
+//        for(WeekDay wd : mappie) {
+//            hourCollections = wd.getHours();
+//            excelWriter = new HourExcelWriter(headersHour, hourCollections);
+//            excelWriter.createExcelFile(excelDest, wd.getDayOfWeek().name() + " - " +"Hour Data");
+//        }
 
     }
 }

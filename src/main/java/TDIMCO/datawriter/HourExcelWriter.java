@@ -83,4 +83,9 @@ public class HourExcelWriter implements ExcelWriter {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public String[] getHeaders() {
+        return new String[] {"Hour", "Total hits", "Sum in hours", "Sum squared in hours", "Average in minutes"};
+    }
 }

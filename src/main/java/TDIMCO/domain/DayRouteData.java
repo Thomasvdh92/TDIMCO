@@ -54,11 +54,12 @@ public class DayRouteData {
         }
         totalHits++;
         sumSquared += Math.pow(seconds, 2);
-        this.sum += seconds;
+        sum += seconds;
         if(minimumTime == 0.0 || minimumTime > seconds) {
             minimumTime = seconds;
             maximumTime = seconds *3;
         }
+
     }
 
     public void calculateAndSetStandardDevation() {
@@ -66,16 +67,17 @@ public class DayRouteData {
             //maybe throw error
             return;
         }
+
         double averageSquared = Math.pow(secondSum/secondTotalHits, 2);
         double sumTimesAverageSquared = secondTotalHits * averageSquared;
         double sumSquaredMinusSumTimesAverageSquared = secondSquared - sumTimesAverageSquared;
         double postFinalNumber = sumSquaredMinusSumTimesAverageSquared/(secondTotalHits - 1);
-        this.standardDevation =Math.sqrt(postFinalNumber);
+        standardDevation =Math.sqrt(postFinalNumber);
     }
 
     public void calculateAndSetExtremity() {
         if(standardDevation == 0) calculateAndSetStandardDevation();
-        this.extremity = (secondSum/secondTotalHits) + standardDevation * 2;
+        extremity = (secondSum/secondTotalHits) + standardDevation * 2;
     }
 
     public String toString() {
