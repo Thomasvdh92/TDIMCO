@@ -67,4 +67,8 @@ public class Hour {
                 "Total sum squared in hours: "+totalSumSquaredInHours + "\n" +
                 "Total average in minutes: " + totalAverageInMinutes;
     }
+
+    public DayRouteData getDrdFromRoute(Route r) {
+        return hourCollection.get(r);
+    }
 }

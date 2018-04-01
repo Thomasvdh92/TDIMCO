@@ -3,6 +3,9 @@ package TDIMCO;
 
 import TDIMCO.datareader.SpanCollection;
 import TDIMCO.datareader.XmlIterator;
+import TDIMCO.domain.*;
+
+import java.time.DayOfWeek;
 
 /**
  * Created by Thomas on 18-3-2018.
@@ -16,17 +19,15 @@ public class Main {
         String excelDest = "F:\\Generated Excel Files";
 
         XmlIterator xmlIterator = new XmlIterator();
-        xmlIterator.iterateXmlFile(voorbeeldxml);
+        xmlIterator.iterateXmlFile(datahavenbedrijf);
 //        xmlIterator.iterateXmlFolder(xmlFolder);
+
 
 //        List<WeekDay> mappie = xmlIterator.getSpanCollection().getWeekDays();
 
         String[] headersDayRouteData = {"Route","totalhits","minimumtime","maximumtime", "sum", "sumSquared",
                             "secondTotalHits","secondSum","secondSquared","standardDevation","extremity"};
         String[] headersHour = {"Hour", "Total hits", "Sum in hours", "Sum squared in hours", "Average in minutes"};
-
-        SpanCollection.printTotalHits();
-        xmlIterator.printVehicleHits();
 
 
 //        ExcelWriter excelWriter;

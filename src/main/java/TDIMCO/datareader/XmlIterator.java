@@ -1,5 +1,7 @@
 package TDIMCO.datareader;
 
+import TDIMCO.domain.Detector;
+import TDIMCO.domain.Device;
 import TDIMCO.domain.VehicleType;
 import lombok.Data;
 import org.w3c.dom.Document;
@@ -44,13 +46,12 @@ public class XmlIterator {
             Document doc = dBuilder.parse(xmlFile);
             doc.getDocumentElement().normalize();
             NodeList deviceNodeList = doc.getElementsByTagName("dev");
-//            System.out.println(getDateFromFilePath(xmlUrl) + " --> Iterating " + deviceNodeList.getLength() + " nodes");
+            System.out.println(getDateFromFilePath(xmlUrl) + " --> Iterating " + deviceNodeList.getLength() + " nodes");
 
             // Iterate through the list of nodes
             iterateXmlNodelist(deviceNodeList, false);
-            iterateXmlNodelist(deviceNodeList, true);
             spanCollection.determineStandardDeviation();
-
+            iterateXmlNodelist(deviceNodeList, true);
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } catch (SAXException e) {
@@ -73,17 +74,23 @@ public class XmlIterator {
             }
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element) node;
-                incrementVehicleHits(String.valueOf(element.getAttribute("c")));
-                String s = String.valueOf(element.getAttribute("id"));
+                String vehicleType = String.valueOf(element.getAttribute("c"));
+                incrementVehicleHits(vehicleType);
+                String devId = String.valueOf(element.getAttribute("id"));
                 NodeList detectionNodeList = element.getElementsByTagName("rdd");
+                Device device = new Device(devId, vehicleType);
+                spanCollection.addDevice(device);
                 if (detectionNodeList.getLength() > 1) {
+                    if(secondIteration) spanCollection.compileRoutes(device, detectionNodeList);
                     for (int j = 0; j < detectionNodeList.getLength()-1; j++) {
                         Node detectionNode = detectionNodeList.item(j);
                         Element detection1 = (Element) detectionNode;
-                        detectionNode = detectionNodeList.item(j + 1);
-                        Element detection2 = (Element) detectionNode;
-                        if (Integer.parseInt(detection1.getAttribute("d")) != Integer.parseInt(detection2.getAttribute("d"))) {
-                            spanCollection.addRouteDetection(detection1, detection2, secondIteration);
+                        for(int k= j+1; k<detectionNodeList.getLength(); k++) {
+                            detectionNode = detectionNodeList.item(k);
+                            Element detection2 = (Element) detectionNode;
+                            if (Integer.parseInt(detection1.getAttribute("d")) != Integer.parseInt(detection2.getAttribute("d"))) {
+                                spanCollection.addRouteDetection(detection1, detection2, secondIteration);
+                            }
                         }
                     }
                 }
@@ -93,7 +100,6 @@ public class XmlIterator {
     }
 
     private void incrementVehicleHits(String s) {
-        System.out.println(s);
         switch(s) {
             case "U":
                 vehicleTypeHits.put("U", vehicleTypeHits.get("U")+1);

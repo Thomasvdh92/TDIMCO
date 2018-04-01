@@ -19,6 +19,7 @@ public class DayRouteData {
     public double secondSum;
     public double secondSquared;
     public double standardDevation;
+    public double standdardDeviation2;
     public double extremity;
 
     public DayRouteData() {
@@ -32,11 +33,7 @@ public class DayRouteData {
         this.secondSquared=0;
         this.standardDevation=0;
         this.extremity=0;
-    }
-
-    public void setDevationAndExtremity() {
-        calculateAndSetStandardDevation();
-        calculateAndSetExtremity();
+        this.standdardDeviation2 = 0;
     }
 
     /**
@@ -53,32 +50,30 @@ public class DayRouteData {
             return;
         }
         totalHits++;
-        sumSquared += Math.pow(seconds, 2);
         sum += seconds;
+        sumSquared += Math.pow(seconds, 2);
         if(minimumTime == 0.0 || minimumTime > seconds) {
             minimumTime = seconds;
-            maximumTime = seconds *3;
         }
 
     }
 
     public void calculateAndSetStandardDevation() {
-        if(secondTotalHits<1) {
+        if(totalHits<=1) {
             //maybe throw error
             return;
         }
 
-        double averageSquared = Math.pow(secondSum/secondTotalHits, 2);
-        double sumTimesAverageSquared = secondTotalHits * averageSquared;
-        double sumSquaredMinusSumTimesAverageSquared = secondSquared - sumTimesAverageSquared;
-        double postFinalNumber = sumSquaredMinusSumTimesAverageSquared/(secondTotalHits - 1);
+        double averageSquared = Math.pow(sum/totalHits, 2);
+        double sumTimesAverageSquared = totalHits * averageSquared;
+        double sumSquaredMinusSumTimesAverageSquared = sumSquared - sumTimesAverageSquared;
+        double postFinalNumber = sumSquaredMinusSumTimesAverageSquared/(totalHits - 1);
         standardDevation =Math.sqrt(postFinalNumber);
+        maximumTime = (sum/totalHits) + standardDevation * 2;
+
+
     }
 
-    public void calculateAndSetExtremity() {
-        if(standardDevation == 0) calculateAndSetStandardDevation();
-        extremity = (secondSum/secondTotalHits) + standardDevation * 2;
-    }
 
     public String toString() {
         return "Totalhits: "+ totalHits + " minimumtime: " +minimumTime + " total sum: "+ sum + " maximum time: "+ maximumTime + " sumsquared:"+sumSquared;
