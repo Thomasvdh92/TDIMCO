@@ -35,6 +35,15 @@ public class Device {
 
     }
 
+    @Override
+    public String toString() {
+        return "Device{" +
+                "devId='" + devId + '\'' +
+                ", vehicleType=" + vehicleType +
+                ", deviceRoutes=" + deviceRoutes +
+                '}';
+    }
+
     public String getDevId() {
         return devId;
     }

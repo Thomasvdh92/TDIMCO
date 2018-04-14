@@ -1,5 +1,6 @@
 package TDIMCO.domain;
 
+import TDIMCO.DataAccess.DeviceRoutesDAO;
 import lombok.Data;
 
 import java.util.*;
@@ -18,10 +19,22 @@ public class Hour {
 
     // Collection of data. A route is from 1 detector to a second detector
     private HashMap<Route, DayRouteData> hourCollection;
+    private List<Device> devices;
+
+
 
     public Hour(int hourNumber) {
         this.hourNumber = hourNumber;
         hourCollection = new HashMap<>();
+        devices = new ArrayList<>();
+    }
+
+    public void addRouteToDevice(Route r, Device device) {
+        if(!devices.contains(device)) {
+            devices.add(device);
+        }
+        int deviceIndex = devices.indexOf(device);
+        devices.get(deviceIndex).getDeviceRoutes().add(r);
     }
 
     /**
@@ -31,13 +44,10 @@ public class Hour {
      * @param secondIteration Boolean to determine the iteration
      */
     public void addTimeToDrd(Route r, double seconds, boolean secondIteration) {
-        if(hourCollection.containsKey(r)){
-            hourCollection.get(r).addTimeToDayRouteData(seconds,secondIteration);
-        }
-        else {
+        if(!hourCollection.containsKey(r)){
             hourCollection.put(r, new DayRouteData());
-            hourCollection.get(r).addTimeToDayRouteData(seconds,secondIteration);
         }
+        hourCollection.get(r).addTimeToDayRouteData(seconds,secondIteration);
     }
 
     /**

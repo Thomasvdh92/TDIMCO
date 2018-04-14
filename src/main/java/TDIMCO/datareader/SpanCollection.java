@@ -1,5 +1,6 @@
 package TDIMCO.datareader;
 
+import TDIMCO.DataAccess.DeviceRoutesDAO;
 import TDIMCO.domain.*;
 import lombok.Data;
 import org.w3c.dom.Element;
@@ -23,10 +24,8 @@ public class SpanCollection {
      */
     private List<WeekDay> weekDays;
     public final static List<RouteTotalHits> hitList = new ArrayList<>();
-    private List<Device> devices;
 
     public SpanCollection() {
-        devices = new ArrayList<>();
         buildWeekDays();
     }
 
@@ -92,35 +91,44 @@ public class SpanCollection {
         }
     }
 
-    public void addDevice(Device device) {
-        if(!devices.contains(device)) devices.add(device);
-    }
-
     public void compileRoutes(Device device, NodeList detectionNodeList) {
         int startDetec = 0;
         for(int i=1;i<detectionNodeList.getLength();i++) {
-            if(!isViableRouteTime(detectionNodeList, i-1, i) && i - startDetec != 1) {
-                compileRoute(device, detectionNodeList, startDetec, i-1);
+            if(!isViableRouteTime(detectionNodeList, i-1, i) && i - startDetec != 1
+                    && !getDetectorFromNodeList(detectionNodeList, startDetec).equals(getDetectorFromNodeList(detectionNodeList, i-1))) {
+                LocalDateTime date = getDateFromNodeList(detectionNodeList, startDetec);
+                compileRoute(device, detectionNodeList, startDetec, i-1, date);
                 startDetec = i;
             }
         }
     }
 
-    private void compileRoute(Device device, NodeList detectionNodeList, int first, int last) {
+    private void compileRoute(Device device, NodeList detectionNodeList, int first, int last, LocalDateTime date) {
         Detector startDetec = getDetectorFromNodeList(detectionNodeList, first);
         Detector endDetec = getDetectorFromNodeList(detectionNodeList, last);
+        if(startDetec.equals(endDetec)) return;
         Route r = new Route(startDetec, endDetec);
-        devices.get(devices.indexOf(device)).getDeviceRoutes().add(r);
+        WeekDay wd = new WeekDay(date.getDayOfWeek());
+        LocalDateTime ldt = getDateFromNodeList(detectionNodeList, first);
+        DeviceRoutes deviceRoutes = new DeviceRoutes(device);
+        deviceRoutes.addRoute(ldt, r);
+        DeviceRoutesDAO deviceRoutesDAO = new DeviceRoutesDAO();
+        deviceRoutesDAO.createOrUpdate(deviceRoutes);
+
+        int indexOfWeekday = weekDays.indexOf(wd);
+        int hour =  date.getHour();
+        weekDays.get(indexOfWeekday).getHours().get(hour).addRouteToDevice(r, device);
     }
 
-    private boolean isViableRouteTime(NodeList detectionNodeList, int i, int i1) {
-        Element detection1 = (Element) detectionNodeList.item(i);
-        Element detection2 = (Element) detectionNodeList.item(i1);
+    private boolean isViableRouteTime(NodeList detectionNodeList, int detectorOneIndex, int detectorTwoIndex) {
+        Element detection1 = (Element) detectionNodeList.item(detectorOneIndex);
+        Element detection2 = (Element) detectionNodeList.item(detectorTwoIndex);
         LocalDateTime date1 = getDateFromDetection(detection1);
         LocalDateTime date2 = getDateFromDetection(detection2);
         double seconds = date1.until(date2, ChronoUnit.SECONDS);
-        Detector d1= getDetectorFromNodeList(detectionNodeList, i);
-        Detector d2 = getDetectorFromNodeList(detectionNodeList, i1);
+        Detector d1= getDetectorFromNodeList(detectionNodeList, detectorOneIndex);
+        Detector d2 = getDetectorFromNodeList(detectionNodeList, detectorTwoIndex);
+        if(d1.equals(d2)) return false;
         Route r = new Route(d1, d2);
         return seconds < getDrd(r, date1).getMaximumTime();
 
@@ -130,6 +138,12 @@ public class SpanCollection {
         Node node = detectionNodeList.item(i);
         Element element = (Element) node;
         return new Detector(Integer.parseInt(element.getAttribute("d")));
+    }
+
+    private LocalDateTime getDateFromNodeList(NodeList detectionNodeList, int index) {
+        Node node = detectionNodeList.item(index);
+        Element element = (Element) node;
+        return getDateFromDetection(element);
     }
 
 }
