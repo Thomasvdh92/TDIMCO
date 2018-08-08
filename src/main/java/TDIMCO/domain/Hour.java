@@ -1,7 +1,7 @@
 package TDIMCO.domain;
 
-import TDIMCO.DataAccess.DeviceRoutesDAO;
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.*;
 
@@ -11,6 +11,7 @@ import java.util.*;
 @Data
 public class Hour {
 
+    @Getter
     private int hourNumber;
     private int hourTotalHits;
     private double totalSumInHours;
@@ -19,22 +20,11 @@ public class Hour {
 
     // Collection of data. A route is from 1 detector to a second detector
     private HashMap<Route, DayRouteData> hourCollection;
-    private List<Device> devices;
-
 
 
     public Hour(int hourNumber) {
         this.hourNumber = hourNumber;
         hourCollection = new HashMap<>();
-        devices = new ArrayList<>();
-    }
-
-    public void addRouteToDevice(Route r, Device device) {
-        if(!devices.contains(device)) {
-            devices.add(device);
-        }
-        int deviceIndex = devices.indexOf(device);
-        devices.get(deviceIndex).getDeviceRoutes().add(r);
     }
 
     /**
@@ -76,9 +66,5 @@ public class Hour {
                 "Total sum in hours: "+totalSumInHours + "\n" +
                 "Total sum squared in hours: "+totalSumSquaredInHours + "\n" +
                 "Total average in minutes: " + totalAverageInMinutes;
-    }
-
-    public DayRouteData getDrdFromRoute(Route r) {
-        return hourCollection.get(r);
     }
 }

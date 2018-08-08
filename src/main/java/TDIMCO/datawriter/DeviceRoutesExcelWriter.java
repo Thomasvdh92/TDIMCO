@@ -1,7 +1,6 @@
 package TDIMCO.datawriter;
 
-import TDIMCO.domain.Device;
-import TDIMCO.domain.Hour;
+import TDIMCO.domain.DeviceRoutes;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -16,9 +15,9 @@ import java.util.List;
 public class DeviceRoutesExcelWriter implements ExcelWriter {
 
     private String[] columns;
-    private List<Device> deviceList;
+    private List<DeviceRoutes> deviceList;
 
-    public DeviceRoutesExcelWriter(String[] columns, List<Device> deviceList) {
+    public DeviceRoutesExcelWriter(String[] columns, List<DeviceRoutes> deviceList) {
         this.columns = columns;
         this.deviceList = deviceList;
     }
@@ -29,6 +28,7 @@ public class DeviceRoutesExcelWriter implements ExcelWriter {
         Workbook workbook = new XSSFWorkbook();
 
         CreationHelper creationHelper = workbook.getCreationHelper();
+
 
         Sheet sheet = workbook.createSheet("Device Route collection");
         Font headerFont = workbook.createFont();
@@ -50,19 +50,21 @@ public class DeviceRoutesExcelWriter implements ExcelWriter {
         int rowNum = 1;
         int amountOfColumns = columns.length;
         int extraColumns = 0;
-        for (Device d : deviceList) {
+        for (DeviceRoutes d : deviceList) {
             Row row = sheet.createRow(rowNum++);
 
             row.createCell(0)
-                    .setCellValue(d.getDevId());
+                    .setCellValue(d.getDevice().getDevId());
 
             row.createCell(1)
-                    .setCellValue(d.getVehicleType().toString());
+                    .setCellValue(d.getDevice().getVehicleType().toString());
 
-            for (int i = 0; i < d.getDeviceRoutes().size(); i++) {
-                if(i > extraColumns) extraColumns=i;
-                row.createCell(i+2)
-                        .setCellValue(d.getDeviceRoutes().get(i).toString());
+            for (int i = 0; i < d.getRoutes().size(); i++) {
+                if (i > extraColumns) extraColumns = i;
+                row.createCell(i + 2)
+                        .setCellValue(d.getRoutes().get(i).getLdt().toLocalDate().toString() + " : "
+                                + d.getRoutes().get(i).getDetectors().toString() + "->"
+                                + MillisConverter.convertMillis((long) d.getRoutes().get(i).getRouteTimeInMillis()));
             }
         }
 
@@ -82,8 +84,8 @@ public class DeviceRoutesExcelWriter implements ExcelWriter {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
+
 
     @Override
     public String[] getHeaders() {

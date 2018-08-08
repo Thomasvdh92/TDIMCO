@@ -1,6 +1,5 @@
 package TDIMCO.datareader;
 
-import TDIMCO.DataAccess.DeviceRoutesDAO;
 import TDIMCO.domain.*;
 import lombok.Data;
 import org.w3c.dom.Element;
@@ -12,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class that represents a collection of {@link Hour} hours
@@ -23,10 +23,18 @@ public class SpanCollection {
      * List of hours containing all the routes and data collections. The list is always 24 indexes big
      */
     private List<WeekDay> weekDays;
+    private List<DeviceRoutes> deviceRoutesCollection;
     public final static List<RouteTotalHits> hitList = new ArrayList<>();
 
     public SpanCollection() {
         buildWeekDays();
+        deviceRoutesCollection = new ArrayList<>();
+    }
+
+    public void printDeviceRoutes() {
+        for(DeviceRoutes dr : deviceRoutesCollection) {
+            System.out.println(dr.toString());
+        }
     }
 
     private void buildWeekDays() {
@@ -36,16 +44,21 @@ public class SpanCollection {
         }
     }
 
-    public void determineStandardDeviation() {
+    public void determineMaximumTimeForDrd(boolean secondIteration) {
         for(WeekDay wd:weekDays) {
             for (Hour h : wd.getHours()) {
                 h.setTotals();
                 for (DayRouteData drd : h.getHourCollection().values()) {
-                    drd.calculateAndSetStandardDevation();
+                    if(secondIteration) {
+                        drd.setSecondMaxTime(drd.calculateMaximumTime(drd.getSecondTotalHits(), drd.getSecondSum(), drd.getSecondSquared()));
+                        continue;
+                    }
+                    drd.setMaximumTime(drd.calculateMaximumTime(drd.getTotalHits(), drd.getSum(), drd.getSumSquared()));
                 }
             }
         }
     }
+
 
     public void addRouteDetection(Element detection1, Element detection2, boolean secondIteration) {
         Detector d1 = new Detector(Integer.parseInt(detection1.getAttribute("d")));
@@ -69,14 +82,14 @@ public class SpanCollection {
         weekDays.get(indexOfWeekday).getHours().get(hour).addTimeToDrd(r,seconds,secondIteration);
     }
 
-    private DayRouteData getDrd(Route r, LocalDateTime date) {
+    public DayRouteData getDrd(Route r, LocalDateTime date) {
         WeekDay wd = new WeekDay(date.getDayOfWeek());
         int hour =  date.getHour();
         int indexOfWeekday = weekDays.indexOf(wd);
         return weekDays.get(indexOfWeekday).getHours().get(hour).getHourCollection().get(r);
     }
 
-    private LocalDateTime getDateFromDetection(Element detection1) {
+    public LocalDateTime getDateFromDetection(Element detection1) {
         String s = detection1.getAttribute("t");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yyyy HH:mm:ss");
         return LocalDateTime.parse(s, formatter);
@@ -92,32 +105,48 @@ public class SpanCollection {
     }
 
     public void compileRoutes(Device device, NodeList detectionNodeList) {
+
         int startDetec = 0;
-        for(int i=1;i<detectionNodeList.getLength();i++) {
-            if(!isViableRouteTime(detectionNodeList, i-1, i) && i - startDetec != 1
-                    && !getDetectorFromNodeList(detectionNodeList, startDetec).equals(getDetectorFromNodeList(detectionNodeList, i-1))) {
-                LocalDateTime date = getDateFromNodeList(detectionNodeList, startDetec);
-                compileRoute(device, detectionNodeList, startDetec, i-1, date);
-                startDetec = i;
+        List<Detector> detectors = new ArrayList<>();
+        detectors.add(getDetectorFromNodeList(detectionNodeList, startDetec));
+        for(int currentDetec=1;currentDetec<detectionNodeList.getLength();currentDetec++) {
+            if(!getDetectorFromNodeList(detectionNodeList, startDetec).equals(getDetectorFromNodeList(detectionNodeList, currentDetec)) &&
+                    !getDetectorFromNodeList(detectionNodeList, currentDetec-1).equals(getDetectorFromNodeList(detectionNodeList, currentDetec))) {
+
+                if (isViableRouteTime(detectionNodeList, startDetec, currentDetec)) {
+                    detectors.add(getDetectorFromNodeList(detectionNodeList, currentDetec));
+                    if(currentDetec == detectionNodeList.getLength()-1 && detectors.size() > 1) {
+                        int endDetec = currentDetec - 1;
+                        double seconds = getDateFromNodeList(detectionNodeList, startDetec).until(getDateFromNodeList(detectionNodeList, endDetec), ChronoUnit.SECONDS);
+                        if(TimeUnit.SECONDS.toHours((long)seconds) > 5) continue;
+                        passOnListToDeviceRoute(getDateFromNodeList(detectionNodeList, startDetec), device, detectors, seconds);
+                    }
+                } else if(detectors.size() > 1) {
+                    int endDetec = currentDetec - 1;
+                    double seconds = getDateFromNodeList(detectionNodeList, startDetec).until(getDateFromNodeList(detectionNodeList, endDetec), ChronoUnit.SECONDS);
+                    if(TimeUnit.SECONDS.toHours((long)seconds) > 5) continue;
+                    passOnListToDeviceRoute(getDateFromNodeList(detectionNodeList, startDetec), device, detectors, seconds);
+                    detectors = new ArrayList<>();
+                    startDetec = currentDetec;
+                    detectors.add(getDetectorFromNodeList(detectionNodeList, startDetec));
+                } else {
+                    detectors = new ArrayList<>();
+                    startDetec = currentDetec;
+                    detectors.add(getDetectorFromNodeList(detectionNodeList, startDetec));
+                }
             }
         }
     }
 
-    private void compileRoute(Device device, NodeList detectionNodeList, int first, int last, LocalDateTime date) {
-        Detector startDetec = getDetectorFromNodeList(detectionNodeList, first);
-        Detector endDetec = getDetectorFromNodeList(detectionNodeList, last);
-        if(startDetec.equals(endDetec)) return;
-        Route r = new Route(startDetec, endDetec);
-        WeekDay wd = new WeekDay(date.getDayOfWeek());
-        LocalDateTime ldt = getDateFromNodeList(detectionNodeList, first);
+    private void passOnListToDeviceRoute(LocalDateTime ldt, Device device, List<Detector> detectors, double seconds) {
         DeviceRoutes deviceRoutes = new DeviceRoutes(device);
-        deviceRoutes.addRoute(ldt, r);
-        DeviceRoutesDAO deviceRoutesDAO = new DeviceRoutesDAO();
-        deviceRoutesDAO.createOrUpdate(deviceRoutes);
 
-        int indexOfWeekday = weekDays.indexOf(wd);
-        int hour =  date.getHour();
-        weekDays.get(indexOfWeekday).getHours().get(hour).addRouteToDevice(r, device);
+        if(seconds <= 5) return;
+        if(!deviceRoutesCollection.contains(deviceRoutes)) {
+            deviceRoutesCollection.add(deviceRoutes);
+        }
+        int index = deviceRoutesCollection.indexOf(deviceRoutes);
+        deviceRoutesCollection.get(index).addRoute(ldt, detectors, seconds);
     }
 
     private boolean isViableRouteTime(NodeList detectionNodeList, int detectorOneIndex, int detectorTwoIndex) {
@@ -130,8 +159,9 @@ public class SpanCollection {
         Detector d2 = getDetectorFromNodeList(detectionNodeList, detectorTwoIndex);
         if(d1.equals(d2)) return false;
         Route r = new Route(d1, d2);
+        DayRouteData drd = getDrd(r, date1);
+        if (drd.getTotalHits() ==1 || drd.getMaximumTime() == 0) return false;
         return seconds < getDrd(r, date1).getMaximumTime();
-
     }
 
     private Detector getDetectorFromNodeList(NodeList detectionNodeList, int i) {

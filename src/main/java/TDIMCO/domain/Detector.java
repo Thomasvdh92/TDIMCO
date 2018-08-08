@@ -22,43 +22,9 @@ public class Detector implements Comparable<Detector>{
         this.detectorId = detectorId;
     }
 
+    @Override
     public String toString() {
         return String.valueOf(detectorId);
-    }
-
-    //TODO determine if this method is needed or no
-    public List<Integer> getAllDetectors() {
-        List<Integer> list = new ArrayList<Integer>();
-        String filePath = "C:\\School\\TDIMCOapp\\src\\Detectors.txt";
-
-        BufferedReader bufferedReader = null;
-        try {
-            bufferedReader = new BufferedReader(new FileReader(filePath));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        StringBuffer stringBuffer = new StringBuffer();
-        String line = null;
-
-        try {
-            assert bufferedReader != null;
-            while((line =bufferedReader.readLine())!=null){
-
-                stringBuffer.append(line).append("\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        String s = stringBuffer.toString();
-        s = s.replaceAll("\\s+","");
-        String[] arr = s.split(",");
-        for(String st : arr) {
-            list.add((Integer.parseInt(st)));
-        }
-
-        return list;
     }
 
     @Override

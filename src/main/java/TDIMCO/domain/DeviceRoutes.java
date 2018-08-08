@@ -1,13 +1,14 @@
 package TDIMCO.domain;
 
+import TDIMCO.datawriter.MillisConverter;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import lombok.Data;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-
+//TODO Deze data in een database krijgen
 @Data
 public class DeviceRoutes {
 
@@ -17,24 +18,51 @@ public class DeviceRoutes {
 
     public DeviceRoutes(Device device) {
         this.device = device;
-        routes = new ArrayList<>();
     }
 
-    public void addRoute(LocalDateTime ldt, Route r) {
+    public void addRoute(LocalDateTime ldt, List<Detector> detectors, double routeTimeInMillis) {
         if(routes == null) {
             routes = new ArrayList<>();
         }
-        routes.add(new DeviceRoute(ldt, r));
+        DeviceRoute dr = new DeviceRoute(ldt, detectors, routeTimeInMillis);
+        routes.add(dr);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) return true;
+        if(o instanceof DeviceRoutes) {
+            DeviceRoutes d = (DeviceRoutes) o;
+            return this.device == d.device;
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        String s = device.toString();
+        for(DeviceRoute dr : routes) {
+            s += dr.toString() + " ";
+        }
+        return s;
     }
 
     @Data
-    public class DeviceRoute {
+    public static class DeviceRoute {
+        //TODO defaq waarom werkt het met een int array wel dfsgsfasdfsfgh...
+        /** TODO
+         * Moment van binnenkomen - Weekdag, tijdstip en detector
+         * Moment van verlaten - Weekdag, tijdstip en detector
+         */
         private LocalDateTime ldt;
-        private Route route;
+        @Getter
+        private List<Detector> detectors;
+        private double routeTimeInMillis;
 
-        public DeviceRoute(LocalDateTime ldt, Route route) {
+        public DeviceRoute(LocalDateTime ldt, List<Detector> detectors, double routeTimeInMillis) {
             this.ldt = ldt;
-            this.route = route;
+            this.detectors = detectors;
+            this.routeTimeInMillis = routeTimeInMillis;
         }
 
         @Override
@@ -42,11 +70,20 @@ public class DeviceRoutes {
             if(this == o) return true;
             if(o instanceof DeviceRoute) {
                 DeviceRoute d = (DeviceRoute) o;
-                return this.ldt == d.ldt && this.route == d.route;
+                return this.ldt == d.ldt && this.detectors == d.detectors;
             }
             return false;
         }
+
+        @Override
+        public String toString() {
+            StringBuilder s = new StringBuilder();
+            s.append(ldt).append(" Detectors --> ");
+            for(Detector d : detectors) {
+                s.append(d).append(" ");
+            }
+            s.append(" route time: ").append(MillisConverter.convertMillis((long) routeTimeInMillis));
+            return s.toString();
+        }
     }
-
-
 }

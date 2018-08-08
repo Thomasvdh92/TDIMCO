@@ -1,8 +1,9 @@
 package TDIMCO.datareader;
 
-import TDIMCO.domain.Detector;
+import TDIMCO.domain.DayRouteData;
 import TDIMCO.domain.Device;
-import TDIMCO.domain.VehicleType;
+import TDIMCO.domain.Hour;
+import TDIMCO.domain.WeekDay;
 import lombok.Data;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -29,12 +30,14 @@ public class XmlIterator {
     private SpanCollection spanCollection;
     public int perc;
     private final static HashMap<String, Integer> vehicleTypeHits = new HashMap<>();
+    private int iterations;
 
     public XmlIterator() {
         spanCollection = new SpanCollection();
         vehicleTypeHits.put("C", 0);
         vehicleTypeHits.put("T", 0);
         vehicleTypeHits.put("U", 0);
+        iterations = 0;
     }
 
     public void iterateXmlFile(String xmlUrl, boolean secondIteration) {
@@ -49,12 +52,14 @@ public class XmlIterator {
 //            System.out.println(getDateFromFilePath(xmlUrl) + " --> Iterating " + deviceNodeList.getLength() + " nodes");
 
             // Iterate through the list of nodes
-            if(secondIteration) {
-                spanCollection.determineStandardDeviation();
-                compileRoutesFromDeviceNodeList(deviceNodeList);
-            }
             iterateXmlNodelist(deviceNodeList, secondIteration);
-            System.gc();
+            spanCollection.determineMaximumTimeForDrd(secondIteration);
+
+//            while(!checkDeviationOnDrds()) {
+//                setDrdValuesToFirst();
+//                iterateXmlNodelist(deviceNodeList, true);
+//            }
+
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } catch (SAXException e) {
@@ -62,6 +67,42 @@ public class XmlIterator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setDrdValuesToFirst() {
+        for(WeekDay wd : spanCollection.getWeekDays()) {
+            for(Hour h : wd.getHours()) {
+                for(DayRouteData drd : h.getHourCollection().values()) {
+                    drd.setDrdValuesToFirst();
+                }
+            }
+        }
+    }
+
+    public boolean checkDeviationOnDrds() {
+        iterations++;
+        if(iterations == 10) {
+            System.out.println("lol");
+        }
+        int total = 0;
+        double percentage = 10;
+        for(WeekDay wd : spanCollection.getWeekDays()) {
+            for(Hour h : wd.getHours()) {
+                for(DayRouteData drd : h.getHourCollection().values()){
+                    total++;
+                    double min = drd.getMaximumTime() - (drd.getMaximumTime()/percentage);
+                    double max = drd.getMaximumTime() + (drd.getMaximumTime()/percentage);
+                    if(drd.getSecondMaxTime() >= min && drd.getSecondMaxTime() <= max) {
+                        DayRouteData.incrementAmountDeviation();
+                    }
+                }
+            }
+        }
+        System.out.println("Total object according to xmliterator: " + total);
+        System.out.println("Amount of DRD objects: " + DayRouteData.getAmountOfDrdObjects());
+        System.out.println("Amount not deviating past 10 percent: " + DayRouteData.getAmountNotDeviatingPastTenPrcnt());
+        if(DayRouteData.getAmountNotDeviatingPastTenPrcnt() >= (DayRouteData.getAmountOfDrdObjects() - (DayRouteData.getAmountOfDrdObjects()/percentage))) return true;
+        return false;
     }
 
 
@@ -106,32 +147,60 @@ public class XmlIterator {
         System.out.println("Elapsed time for method \"iterateXmlNodeList\": " + (elapsedTime / 1000)/60 + "min " +(elapsedTime/1000)%60+"sec");
     }
 
-    private void compileRoutesFromDeviceNodeList(NodeList deviceNodeList) {
-        long startTime = System.currentTimeMillis();
-        System.out.println("Compiling device routes from device nodelist");
-        perc = 10;
-        for (int i = 0; i < deviceNodeList.getLength(); i++) {
-            Node deviceNode = deviceNodeList.item(i);
-            if (i == deviceNodeList.getLength() - 2) System.out.println("100% completed");
-            if (((i * 100) / deviceNodeList.getLength()) >= perc) {
-                System.out.println(perc + "% done");
-                perc += 10;
+    public void compileRoutesFromFolder(String folderPath) {
+        int i=0;
+        File[] files = new File(folderPath).listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                compileRoutesFromFolder(file.getPath());
             }
-            if (deviceNode.getNodeType() == Node.ELEMENT_NODE) {
-                Element element = (Element) deviceNode;
-                NodeList detectionNodeList = element.getElementsByTagName("rdd");
-                if (detectionNodeList.getLength() > 1) {
-                    String vehicleType = String.valueOf(element.getAttribute("c"));
-                    String devId = String.valueOf(element.getAttribute("id"));
-                    Device device = new Device(devId, vehicleType);
-                    spanCollection.compileRoutes(device, detectionNodeList);
+            compileRoutesFromDeviceNodeList(file.getAbsolutePath());
+            i++;
+            System.out.println(i + "/" + files.length +" files done");
+        }
+    }
+
+    public void compileRoutesFromDeviceNodeList(String xmlUrl) {
+        File xmlFile = new File(xmlUrl);
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder;
+        try {
+            dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(xmlFile);
+            doc.getDocumentElement().normalize();
+            NodeList deviceNodeList = doc.getElementsByTagName("dev");
+            long startTime = System.currentTimeMillis();
+            System.out.println("Compiling device routes from device nodelist");
+            perc = 10;
+            for (int i = 0; i < deviceNodeList.getLength(); i++) {
+                Node deviceNode = deviceNodeList.item(i);
+                if (i == deviceNodeList.getLength() - 2) System.out.println("100% completed");
+                if (((i * 100) / deviceNodeList.getLength()) >= perc) {
+                    System.out.println(perc + "% done");
+                    perc += 10;
+                }
+                if (deviceNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element element = (Element) deviceNode;
+                    NodeList detectionNodeList = element.getElementsByTagName("rdd");
+                    if (detectionNodeList.getLength() > 1) {
+                        String vehicleType = String.valueOf(element.getAttribute("c"));
+                        String devId = String.valueOf(element.getAttribute("id"));
+                        Device device = new Device(devId, vehicleType);
+                        spanCollection.compileRoutes(device, detectionNodeList);
+                    }
                 }
             }
+            System.gc();
+            long stopTime = System.currentTimeMillis();
+            long elapsedTime = stopTime - startTime;
+            System.out.println("Elapsed time for method \"compileRoutesFromDeviceNodeList\": " + (elapsedTime / 1000) / 60 + "min " + (elapsedTime / 1000) % 60 + "sec");
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SAXException e) {
+            e.printStackTrace();
         }
-        System.gc();
-        long stopTime = System.currentTimeMillis();
-        long elapsedTime = stopTime - startTime;
-        System.out.println("Elapsed time for method \"compileRoutesFromDeviceNodeList\": " + (elapsedTime / 1000)/60 + "min " +(elapsedTime/1000)%60+"sec");
     }
 
     private void incrementVehicleHits(String s) {
@@ -149,14 +218,13 @@ public class XmlIterator {
     }
 
     public void iterateXmlFolder(String folderPath, boolean secondIteration) {
-        int prcnt = 10;
         int i=0;
         File[] files = new File(folderPath).listFiles();
         for (File file : files) {
             if (file.isDirectory()) {
                 iterateXmlFolder(file.getPath(), secondIteration);
             }
-            iterateXmlFile(file.getAbsolutePath(),secondIteration);
+            iterateXmlFile(file.getAbsolutePath(), secondIteration);
             i++;
             System.out.println(i + "/" + files.length +" files done");
         }

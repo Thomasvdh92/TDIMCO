@@ -1,6 +1,7 @@
 package TDIMCO.domain;
 
 import lombok.Data;
+import lombok.Getter;
 
 /**
  * Collection of data. This class is also responsible for the regulation the iterations.
@@ -9,6 +10,15 @@ import lombok.Data;
 @Data
 public class DayRouteData {
 
+    /**
+     * Two static variables used to compare the first maximum time to the second maximum time.
+     * If the second time does not diverge more than 10% from the first maximum time, the second static is
+     * incremented. The first static is always incremented when an object is made.
+     */
+    @Getter
+    private static int amountOfDrdObjects = 0;
+    @Getter
+    private static int amountNotDeviatingPastTenPrcnt = 0;
 
     private int totalHits;
     private double minimumTime;
@@ -18,9 +28,7 @@ public class DayRouteData {
     public int secondTotalHits;
     public double secondSum;
     public double secondSquared;
-    public double standardDevation;
-    public double standdardDeviation2;
-    public double extremity;
+    public double secondMaxTime;
 
     public DayRouteData() {
         this.totalHits= 0;
@@ -31,9 +39,27 @@ public class DayRouteData {
         this.secondTotalHits=0;
         this.secondSum=0;
         this.secondSquared=0;
-        this.standardDevation=0;
-        this.extremity=0;
-        this.standdardDeviation2 = 0;
+        this.secondMaxTime = 0;
+        amountOfDrdObjects++;
+    }
+
+    public void setDrdValuesToFirst() {
+        totalHits = secondTotalHits;
+        secondTotalHits = 0;
+        maximumTime = secondMaxTime;
+        secondMaxTime = 0;
+        sum = secondSum;
+        secondSum = 0;
+        sumSquared = secondSquared;
+        secondSquared = 0;
+        amountNotDeviatingPastTenPrcnt = 0;
+    }
+
+    /**
+     * Method used to increment a class static
+     */
+    public static void incrementAmountDeviation() {
+        amountNotDeviatingPastTenPrcnt++;
     }
 
     /**
@@ -58,24 +84,24 @@ public class DayRouteData {
 
     }
 
-    public void calculateAndSetStandardDevation() {
+    public double calculateMaximumTime(int totalHits, double sum, double sumSquared) {
         if(totalHits<=1) {
             //maybe throw error
-            return;
+            return 0;
         }
 
         double averageSquared = Math.pow(sum/totalHits, 2);
         double sumTimesAverageSquared = totalHits * averageSquared;
         double sumSquaredMinusSumTimesAverageSquared = sumSquared - sumTimesAverageSquared;
         double postFinalNumber = sumSquaredMinusSumTimesAverageSquared/(totalHits - 1);
-        standardDevation =Math.sqrt(postFinalNumber);
-        maximumTime = (sum/totalHits) + standardDevation * 2;
-
-
+        double standardDevation =Math.sqrt(postFinalNumber);
+        return ((sum/totalHits) + standardDevation * 2);
     }
 
-
+    @Override
     public String toString() {
-        return "Totalhits: "+ totalHits + " minimumtime: " +minimumTime + " total sum: "+ sum + " maximum time: "+ maximumTime + " sumsquared:"+sumSquared;
+        return "Totalhits: "+ totalHits + " minimumtime: " +minimumTime + " total sum: "+ sum + " maximum time: "+ maximumTime + " sumsquared:"+sumSquared + "\n"
+               + "2ndtotalhits" + secondTotalHits;
     }
+
 }

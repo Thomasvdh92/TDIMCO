@@ -1,4 +1,4 @@
-package TDIMCO.DataAccess;
+package TDIMCO.dataaccess;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;

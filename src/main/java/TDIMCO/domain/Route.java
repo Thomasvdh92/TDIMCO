@@ -10,8 +10,6 @@ import lombok.Data;
 public class Route implements Comparable<Route> {
     private Detector detectorOne;
     private Detector detectorTwo;
-    private final static int firstIterationHits =0;
-    private final static int secondIterationHits =0;
 
     public Route(Detector detectorOne, Detector detectorTwo) {
         this.detectorOne = detectorOne;

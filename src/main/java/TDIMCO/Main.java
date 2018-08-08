@@ -1,16 +1,12 @@
 package TDIMCO;
 
 
-import TDIMCO.DataAccess.DeviceRoutesDAO;
-import TDIMCO.datareader.SpanCollection;
+import TDIMCO.dataaccess.DeviceRoutesDaoMYSQL;
+import TDIMCO.dataaccess.HourDRDDaoMySQL;
 import TDIMCO.datareader.XmlIterator;
-import TDIMCO.datawriter.DayRouteExcelWriter;
-import TDIMCO.datawriter.DeviceRoutesExcelWriter;
-import TDIMCO.datawriter.ExcelWriter;
-import TDIMCO.datawriter.HourExcelWriter;
 import TDIMCO.domain.*;
 
-import java.time.DayOfWeek;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -25,24 +21,36 @@ public class Main {
         String excelDest = "F:\\Generated Excel Files";
 
         XmlIterator xmlIterator = new XmlIterator();
-        runBothIterations(datahavenbedrijf, xmlIterator, false);
-        xmlIterator.printVehicleHits();
+        iterateXml(xmlIterator, datahavenbedrijf, false);
 
-        System.out.println(DeviceRoutesDAO.getErrors());
+        for (WeekDay wd : xmlIterator.getSpanCollection().getWeekDays()) {
+            for (Hour h : wd.getHours()) {
+                new HourDRDDaoMySQL().create(h);
+            }
+        }
+
+        for (DeviceRoutes dr : xmlIterator.getSpanCollection().getDeviceRoutesCollection()) {
+            DeviceRoutesDaoMYSQL deviceRoutesDaoMYSQL = new DeviceRoutesDaoMYSQL();
+            deviceRoutesDaoMYSQL.create(dr);
+
+        }
 
 
-//        List<WeekDay> mappie = xmlIterator.getSpanCollection().getWeekDays();
-//
-//        String[] headersDayRouteData = {"Route","totalhits","minimumtime","maximumtime", "sum", "sumSquared",
-//                            "secondTotalHits","secondSum","secondSquared","standardDevation","extremity"};
-//        String[] headersHour = {"Hour", "Total hits", "Sum in hours", "Sum squared in hours", "Average in minutes"};
-//
-//        String[] headersDevices = {"ID", "VehicleType", "Routes"};
-//
-//        List<Hour> hourCollections;
-//
+//        System.out.println(DeviceRoutesDAO.getErrors());
+
+
+        List<WeekDay> mappie = xmlIterator.getSpanCollection().getWeekDays();
+
+        String[] headersDayRouteData = {"Route", "totalhits", "minimumtime", "maximumtime", "sum", "sumSquared",
+                "secondTotalHits", "secondSum", "secondSquared", "secondMaxTime", "extremity"};
+        String[] headersHour = {"Hour", "Total hits", "Sum in hours", "Sum squared in hours", "Average in minutes"};
+
+        String[] headersDevices = {"ID", "VehicleType", "Routes"};
+
+        List<Hour> hourCollections;
+
 //        ExcelWriter excelWriter;
-//        for(WeekDay wd : mappie) {
+//        for(WeekDay wd : xmlIterator.getSpanCollection().getWeekDays()) {
 //            hourCollections = wd.getHours();
 //            excelWriter = new DayRouteExcelWriter(headersDayRouteData, hourCollections);
 //            excelWriter.createExcelFile(excelDest, wd.getDayOfWeek().name() + " - " +"DayRouteData");
@@ -52,26 +60,30 @@ public class Main {
 //            excelWriter = new HourExcelWriter(headersHour, hourCollections);
 //            excelWriter.createExcelFile(excelDest, wd.getDayOfWeek().name() + " - " +"Hour Data");
 //        }
-//        List<Device> devices;
 
-//        List<Device> devices = xmlIterator.getSpanCollection().getDevices();
+//        String[] headersDevices = {"ID", "VehicleType","Routes"};
+//        List<DeviceRoutes> devices = xmlIterator.getSpanCollection().getDeviceRoutesCollection();
 //        excelWriter = new DeviceRoutesExcelWriter(headersDevices, devices);
 //        excelWriter.createExcelFile(excelDest, "DeviceRoutes");
 
     }
 
-    private static void runBothIterations(String voorbeeldxml, XmlIterator xmlIterator, boolean iterateFolder) {
+    private static void iterateXml(XmlIterator xmlIterator, String xml, boolean iterateFolder) {
+        runBothIterations(xml, xmlIterator, iterateFolder);
+        xmlIterator.compileRoutesFromDeviceNodeList(xml);
+    }
+
+    private static void runBothIterations(String xmlUrl, XmlIterator xmlIterator, boolean iterateFolder) {
         long startTime = System.currentTimeMillis();
-        if(iterateFolder) {
-            xmlIterator.iterateXmlFolder(voorbeeldxml, false);
-            System.out.println("----------------SECOND----------------");
-            xmlIterator.iterateXmlFolder(voorbeeldxml, true);
+        if (iterateFolder) {
+            xmlIterator.iterateXmlFolder(xmlUrl, false);
+            xmlIterator.iterateXmlFolder(xmlUrl, true);
+        } else {
+            xmlIterator.iterateXmlFile(xmlUrl, false);
+            xmlIterator.iterateXmlFile(xmlUrl, true);
         }
-        xmlIterator.iterateXmlFile(voorbeeldxml, false);
-        System.out.println("----------------SECOND----------------");
-        xmlIterator.iterateXmlFile(voorbeeldxml, true);
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
-        System.out.println("Elapsed time for method \"runBothIterations\": " + (elapsedTime / 1000)/60 + "min " +(elapsedTime/1000)%60+"sec");
+        System.out.println("Elapsed time for method \"runBothIterations\": " + (elapsedTime / 1000) / 60 + "min " + (elapsedTime / 1000) % 60 + "sec");
     }
 }

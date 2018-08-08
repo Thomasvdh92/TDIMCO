@@ -15,7 +15,9 @@ public class Device {
 
     private VehicleType vehicleType;
 
-    private List<Route> deviceRoutes;
+    public Device(String devId) {
+        this.devId =devId;
+    }
 
     public Device(String devId, String vehicleType) {
         this.devId = devId;
@@ -30,9 +32,6 @@ public class Device {
                 this.vehicleType = VehicleType.T;
                 break;
         }
-
-        deviceRoutes = new ArrayList<>();
-
     }
 
     @Override
@@ -40,7 +39,6 @@ public class Device {
         return "Device{" +
                 "devId='" + devId + '\'' +
                 ", vehicleType=" + vehicleType +
-                ", deviceRoutes=" + deviceRoutes +
                 '}';
     }
 

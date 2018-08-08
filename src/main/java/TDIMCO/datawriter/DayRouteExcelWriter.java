@@ -62,7 +62,6 @@ public class DayRouteExcelWriter implements ExcelWriter {
 
                     row.createCell(2)
                             .setCellValue(drd.getMinimumTime());
-
                     row.createCell(3)
                             .setCellValue(drd.getMaximumTime());
                     row.createCell(4)
@@ -76,9 +75,7 @@ public class DayRouteExcelWriter implements ExcelWriter {
                     row.createCell(8)
                             .setCellValue(drd.getSecondSquared());
                     row.createCell(9)
-                            .setCellValue(drd.getStandardDevation());
-                    row.createCell(10)
-                            .setCellValue(drd.getExtremity());
+                            .setCellValue(drd.getSecondMaxTime());
                 }
             }
 

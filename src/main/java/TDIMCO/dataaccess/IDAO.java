@@ -1,5 +1,6 @@
-package TDIMCO.DataAccess;
+package TDIMCO.dataaccess;
 
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -7,7 +8,7 @@ import java.util.List;
  */
 public interface IDAO<T> {
 
-    public T create(T t);
+    public T create(T t) throws ClassNotFoundException, SQLException;
 
     public T read(T t);
 
